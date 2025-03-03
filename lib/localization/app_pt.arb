@@ -1,0 +1,6 @@
+{
+    "appTitle": "pet_adoption_app",
+    "@appTitle": {
+        "description": "Aplicativo para adoção de animais de estimação"
+    }
+}
