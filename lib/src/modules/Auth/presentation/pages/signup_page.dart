@@ -9,6 +9,7 @@ import 'package:pet_adoption/src/utils/widgets/custom_app_bar.dart';
 import 'package:pet_adoption/src/utils/widgets/custom_button.dart';
 import 'package:pet_adoption/src/utils/widgets/custom_form.dart';
 import 'package:pet_adoption/src/utils/widgets/loading_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:string_validator/string_validator.dart' as validator;
 
@@ -164,19 +165,25 @@ class _SignupPageState extends State<SignupPage> {
                     children: [
                       BlocConsumer<UserAuthenticationCubit,
                           UserAuthenticationState>(
-                        listener: (context, state) {
+                        listener: (context, state) async {
                           if (state is UserAuthenticationError) {
                             showActionSnackBar(context);
                           }
                           if (state is UserAuthenticationSuccess) {
+                            final userName = nameController.text;
+                            final email = emailController.text;
+
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            await prefs.setString('userName_$email', userName);
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const PetAdoptionHomePage(),
+                                builder: (context) => PetAdoptionHomePage(
+                                  userName: nameController.text,
+                                ),
                               ),
                             );
-                            clearForm();
                           }
                         },
                         builder: (context, state) {
@@ -201,6 +208,7 @@ class _SignupPageState extends State<SignupPage> {
                             child: CustomButton(
                               textButton: 'Criar conta',
                               onPressed: () {
+                                nameController.text;
                                 if (_formKey.currentState!.validate()) {
                                   signupCubit.signUp(
                                     UserAuthenticationEntity(

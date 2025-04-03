@@ -1,10 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'app_localizations_pt.dart' deferred as app_localizations_pt;
+import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
 
@@ -106,7 +107,7 @@ class _AppLocalizationsDelegate
 
   @override
   Future<AppLocalizations> load(Locale locale) {
-    return lookupAppLocalizations(locale);
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
   }
 
   @override
@@ -117,13 +118,11 @@ class _AppLocalizationsDelegate
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
-Future<AppLocalizations> lookupAppLocalizations(Locale locale) {
+AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'pt':
-      return app_localizations_pt
-          .loadLibrary()
-          .then((dynamic _) => app_localizations_pt.AppLocalizationsPt());
+      return AppLocalizationsPt();
   }
 
   throw FlutterError(

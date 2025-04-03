@@ -79,7 +79,7 @@ void setupRepositories() {
 
   setup.registerFactory<ChatRepository>(
     () => ChatRepositoryImpl(
-      dataSource: GetIt.I.get<ChatDataSource>(),
+      chatDataSource: GetIt.I.get<ChatDataSource>(),
     ),
   );
 }
@@ -141,6 +141,8 @@ void setupCubits() {
   );
   setup.registerFactory<ChatCubit>(
     () => ChatCubit(
+      user1Id: '',
+      user2Id: '',
       addMessageUseCase: GetIt.I.get<AddMessageUseCase>(),
       getMessagesStreamUseCase: GetIt.I.get<GetMessagesStreamUseCase>(),
     ),

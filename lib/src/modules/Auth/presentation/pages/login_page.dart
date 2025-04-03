@@ -10,6 +10,7 @@ import 'package:pet_adoption/src/utils/widgets/custom_app_bar.dart';
 import 'package:pet_adoption/src/utils/widgets/custom_button.dart';
 import 'package:pet_adoption/src/utils/widgets/custom_form.dart';
 import 'package:pet_adoption/src/utils/widgets/loading_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:string_validator/string_validator.dart' as validator;
 
 class LoginPage extends StatefulWidget {
@@ -129,17 +130,26 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       BlocConsumer<UserAuthenticationCubit,
                           UserAuthenticationState>(
-                        listener: (context, state) {
+                        listener: (context, state) async {
                           if (state is UserAuthenticationError) {
                             showActionSnackBar(context);
                           }
 
                           if (state is UserAuthenticationSuccess) {
+                            final email = emailController.text;
+
+                            // Recuperar o nome associado ao email do SharedPreferences
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            final userName =
+                                prefs.getString('userName_$email') ??
+                                    'Usuário não identificado';
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const PetAdoptionHomePage(),
+                                builder: (context) => PetAdoptionHomePage(
+                                  userName: userName,
+                                ),
                               ),
                             );
                             clearForm();
@@ -195,7 +205,7 @@ class _LoginPageState extends State<LoginPage> {
   void showActionSnackBar(BuildContext context) {
     const snackBar = SnackBar(
       content: Text(
-        'Não foi possivel realizar o cadastro',
+        'Não foi possivel entrar, verifique seus dados e tente novamente',
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,

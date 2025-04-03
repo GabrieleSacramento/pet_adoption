@@ -17,7 +17,7 @@ class UserAuthenticationCubit extends Cubit<UserAuthenticationState> {
 
     try {
       final result =
-          await userAuthenticationUseCase.login(userAuthenticationEntity);
+          await userAuthenticationUseCase.signup(userAuthenticationEntity);
       final sp = await SharedPreferences.getInstance();
 
       result.fold(
@@ -68,5 +68,11 @@ class UserAuthenticationCubit extends Cubit<UserAuthenticationState> {
     } on FirebaseAuthException catch (e) {
       emit(UserAuthenticationError(message: e.message!));
     }
+  }
+
+  void logout() async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove('token');
+    emit(UserAuthenticationInitial());
   }
 }
