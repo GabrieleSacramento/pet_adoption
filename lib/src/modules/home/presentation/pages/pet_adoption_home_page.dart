@@ -135,6 +135,37 @@ class _PetAdoptionHomePageState extends State<PetAdoptionHomePage> {
                       }
                       if (state is GetPetInfoSuccess) {
                         final petInfoEntity = state.petInfoEntity;
+                        if (petInfoEntity.isEmpty) {
+                          return Column(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 24.sp,
+                                ),
+                                child: Text(
+                                  'Nenhum pet encontrado',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color.fromRGBO(86, 77, 77, 1),
+                                  ),
+                                ),
+                              ),
+                              Center(
+                                child: CustomButton(
+                                    textButton: 'Doar pet',
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) => const PetForm(),
+                                        ),
+                                      );
+                                    }),
+                              ),
+                            ],
+                          );
+                        }
                         return Padding(
                           padding: EdgeInsets.only(bottom: 32.h),
                           child: GridView.builder(
@@ -155,6 +186,7 @@ class _PetAdoptionHomePageState extends State<PetAdoptionHomePage> {
                                   child: CircularProgressIndicator(),
                                 );
                               }
+
                               return ChooseAPetToAdoptWidget(
                                 petName: state.petInfoEntity[index].name,
                                 petSex: state.petInfoEntity[index].sex,
@@ -191,7 +223,7 @@ class _PetAdoptionHomePageState extends State<PetAdoptionHomePage> {
                       }
                       if (state is GetPetInfoError) {
                         return const Center(
-                          child: Text('Erro ao buscar informações'),
+                          child: Text('Erro ao carregar pets'),
                         );
                       }
                       return const SizedBox.shrink();
