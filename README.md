@@ -1,16 +1,38 @@
-# pet_adoption
+🐾 App de Adoção de Pets
 
-A new Flutter project.
+Bem-vindo ao App de Adoção de Pets, uma plataforma desenvolvida para conectar adotantes a animais que precisam de um lar. O aplicativo permite visualizar pets disponíveis para adoção, conversar com os responsáveis e realizar o processo de adoção de forma simples e segura.
 
-## Getting Started
+🚀 Tecnologias Utilizadas
 
-This project is a starting point for a Flutter application.
+Flutter & Dart → Desenvolvimento mobile multiplataforma
 
-A few resources to get you started if this is your first Flutter project:
+Firebase Authentication → Gerenciamento de login e cadastro
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Firebase Firestore → Armazenamento de dados dos pets e usuários
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Firebase Realtime Database → Gerenciamento de mensagens em tempo real no chat
+
+📱 Funcionalidades Principais
+
+🔐 Autenticação (Login & Cadastro)
+
+Os usuários podem criar uma conta ou fazer login para acessar todas as funcionalidades da plataforma.
+
+
+
+📋 Formulário de Adoção
+
+Para adotar um pet, o usuário preenche um formulário com suas informações e motivos para adoção.
+
+
+
+🐶 Página de Descrição do Pet
+
+Cada pet possui uma página dedicada com fotos, informações e botão para entrar em contato.
+
+
+
+💬 Chat em Tempo Real
+
+Para facilitar a comunicação, o app conta com um chat integrado para conversas entre adotantes e responsáveis pelos pets.
+
