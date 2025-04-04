@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import 'package:get_it/get_it.dart';
+import '../cubit/chat_cubit.dart';
+import '../../domain/entities/chat_entity.dart';
 import '../../../../utils/widgets/custom_app_bar.dart';
 
 class PetAdoptionChatPage extends StatefulWidget {
@@ -12,102 +16,107 @@ class PetAdoptionChatPage extends StatefulWidget {
 
 class _PetAdoptionChatPageState extends State<PetAdoptionChatPage> {
   final chatController = TextEditingController();
+  final ChatCubit _chatCubit = GetIt.instance.get<ChatCubit>();
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Scaffold(
+      child: BlocProvider(
+        create: (context) => _chatCubit,
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Scaffold(
             backgroundColor: const Color.fromRGBO(241, 152, 69, 1),
-            appBar: const CustomAppBar(
+            appBar: CustomAppBar(
               appBarTitle: 'Luciana',
               isBackButtonVisible: true,
+              onBackButtonPressed: () => Navigator.pop(context),
             ),
-            body: SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: CustomScrollView(
-                      slivers: [
-                        SliverFillRemaining(
-                          hasScrollBody: true,
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Flexible(
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 16.h, horizontal: 16.w),
-                                          margin: EdgeInsets.only(
-                                              top: 16.h,
-                                              left: 16.w,
-                                              right: 62.w,
-                                              bottom: 16.h),
-                                          width: double.infinity,
-                                          decoration: BoxDecoration(
-                                            color: const Color.fromRGBO(
-                                                245, 245, 245, 1),
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(10.r),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            'Olá, tenho interesse em adotar o paçoca',
-                                            style: TextStyle(
-                                              fontSize: 16.h,
-                                              color: const Color.fromRGBO(
-                                                  82, 82, 82, 1),
-                                            ),
-                                          ),
-                                        ),
+            body: Column(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                    ),
+                    child: BlocBuilder<ChatCubit, ChatState>(
+                      builder: (context, state) {
+                        if (state is ChatError) {
+                          return const Center(
+                              child:
+                                  Text('Não foi possível exibir as mensagens'));
+                        }
+                        if (state is ChatLoading) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        if (state is ChatMessages) {
+                          return StreamBuilder<List<ChatEntity>>(
+                            stream: _chatCubit.messagesStream,
+                            builder: (context, snapshot) {
+                              final messages = snapshot.data ?? [];
+                              return ListView.builder(
+                                reverse: true,
+                                itemCount: messages.length,
+                                itemBuilder: (context, index) {
+                                  return Container(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 16.h, horizontal: 16.w),
+                                    margin: EdgeInsets.only(
+                                        top: 16.h,
+                                        left: 16.w,
+                                        right: 62.w,
+                                        bottom: 16.h),
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromRGBO(
+                                          245, 245, 245, 1),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(10.r),
                                       ),
-                                      Flexible(
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 16.h, horizontal: 16.w),
-                                          margin: EdgeInsets.only(
-                                              top: 16.h,
-                                              left: 62.w,
-                                              right: 16.w,
-                                              bottom: 16.h),
-                                          width: double.infinity,
-                                          decoration: BoxDecoration(
-                                            color: const Color.fromRGBO(
-                                                254, 184, 119, 1),
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(10.r),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            'Oii tudo bom, me fala um pouco mais sobre você?',
-                                            style: TextStyle(
-                                              fontSize: 16.h,
-                                              color: const Color.fromRGBO(
-                                                  82, 82, 82, 1),
-                                            ),
-                                          ),
-                                        ),
+                                    ),
+                                    child: Text(
+                                      messages[index].message,
+                                      style: TextStyle(
+                                        fontSize: 16.h,
+                                        color:
+                                            const Color.fromRGBO(82, 82, 82, 1),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              _InputChatWidget(chatController: chatController),
-                            ],
-                          ),
-                        )
-                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        }
+                        return Container();
+                      },
                     ),
                   ),
-                ],
-              ),
-            )),
+                ),
+                _InputChatWidget(
+                  chatController: chatController,
+                  onSendMessage: () {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user != null && chatController.text.isNotEmpty) {
+                      final message = ChatEntity(
+                        message: chatController.text,
+                        userName: user.email ?? "Usuário",
+                        createdAt: DateTime.now(),
+                      );
+                      _chatCubit.addMessage(message);
+                      chatController.clear();
+                    }
+                  },
+                  onChanged: (value) {
+                    _chatCubit.updateCurrentMessage(value);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -116,24 +125,27 @@ class _PetAdoptionChatPageState extends State<PetAdoptionChatPage> {
 class _InputChatWidget extends StatelessWidget {
   const _InputChatWidget({
     required this.chatController,
+    required this.onSendMessage,
+    required this.onChanged,
   });
 
   final TextEditingController chatController;
+  final Function() onSendMessage;
+  final Function(String) onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.all(16.sp),
       child: TextFormField(
+        onChanged: onChanged,
         controller: chatController,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         decoration: InputDecoration(
           filled: true,
           hintText: 'Digite sua mensagem',
           suffixIcon: IconButton(
-            onPressed: () {
-              chatController.clear();
-            },
+            onPressed: onSendMessage,
             icon: Padding(
               padding: EdgeInsets.only(right: 8.w),
               child: const Icon(Icons.send),

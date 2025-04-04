@@ -4,30 +4,108 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
+import 'package:pet_adoption/src/modules/Auth/presentation/cubit/user_authentication_cubit.dart';
+import 'package:pet_adoption/src/modules/Auth/presentation/pages/login_method_selection_page.dart';
 import 'package:pet_adoption/src/modules/pet_description/presentation/pages/pet_description_page.dart';
 import 'package:pet_adoption/src/modules/register_pet/presentation/cubit/get_pet_info_cubit.dart';
 import 'package:pet_adoption/src/modules/register_pet/presentation/pages/pet_form_page.dart';
 import 'package:pet_adoption/src/utils/widgets/custom_button.dart';
 
 class PetAdoptionHomePage extends StatefulWidget {
-  const PetAdoptionHomePage({super.key});
+  final String? userName;
+  const PetAdoptionHomePage({
+    super.key,
+    this.userName,
+  });
 
   @override
   State<PetAdoptionHomePage> createState() => _PetAdoptionHomePageState();
 }
 
-final GetPetInfoCubit _getPetInfoCubit = GetIt.I.get<GetPetInfoCubit>();
-final ScrollController _scrollController = ScrollController();
-
 class _PetAdoptionHomePageState extends State<PetAdoptionHomePage> {
+  final GetPetInfoCubit _getPetInfoCubit = GetIt.I.get<GetPetInfoCubit>();
+  final UserAuthenticationCubit _logoutCubit =
+      GetIt.I.get<UserAuthenticationCubit>();
+  final ScrollController _scrollController = ScrollController();
+
+  String? userName;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: BlocProvider(
-        create: (context) => _getPetInfoCubit..loadPets(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => _getPetInfoCubit..loadPets(),
+          ),
+          BlocProvider(
+            create: (context) => _logoutCubit,
+          ),
+        ],
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: const HomePageAppBar(),
+          endDrawer: Drawer(
+            child: ListView(
+              children: [
+                DrawerHeader(
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(241, 152, 69, 1),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircleAvatar(
+                        backgroundColor: Colors.white,
+                        radius: 30,
+                        child: Icon(
+                          Icons.person,
+                          color: Color.fromRGBO(241, 152, 69, 1),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          widget.userName ?? 'Usuário não identificado',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                BlocListener<UserAuthenticationCubit, UserAuthenticationState>(
+                  listener: (context, state) {
+                    if (state is UserAuthenticationError) {
+                      showActionSnackBar(context);
+                    }
+                    if (state is UserAuthenticationInitial) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const LoginMethodSelectionPage(),
+                        ),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  child: ListTile(
+                    title: const Text('Sair'),
+                    onTap: () {
+                      _logoutCubit.logout();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
           body: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
@@ -57,6 +135,37 @@ class _PetAdoptionHomePageState extends State<PetAdoptionHomePage> {
                       }
                       if (state is GetPetInfoSuccess) {
                         final petInfoEntity = state.petInfoEntity;
+                        if (petInfoEntity.isEmpty) {
+                          return Column(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 24.sp,
+                                ),
+                                child: Text(
+                                  'Nenhum pet encontrado',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color.fromRGBO(86, 77, 77, 1),
+                                  ),
+                                ),
+                              ),
+                              Center(
+                                child: CustomButton(
+                                    textButton: 'Doar pet',
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) => const PetForm(),
+                                        ),
+                                      );
+                                    }),
+                              ),
+                            ],
+                          );
+                        }
                         return Padding(
                           padding: EdgeInsets.only(bottom: 32.h),
                           child: GridView.builder(
@@ -77,6 +186,7 @@ class _PetAdoptionHomePageState extends State<PetAdoptionHomePage> {
                                   child: CircularProgressIndicator(),
                                 );
                               }
+
                               return ChooseAPetToAdoptWidget(
                                 petName: state.petInfoEntity[index].name,
                                 petSex: state.petInfoEntity[index].sex,
@@ -113,7 +223,7 @@ class _PetAdoptionHomePageState extends State<PetAdoptionHomePage> {
                       }
                       if (state is GetPetInfoError) {
                         return const Center(
-                          child: Text('Erro ao buscar informações'),
+                          child: Text('Erro ao carregar pets'),
                         );
                       }
                       return const SizedBox.shrink();
@@ -333,16 +443,47 @@ class HomePageAppBar extends StatelessWidget implements PreferredSizeWidget {
                 color: const Color.fromRGBO(241, 152, 69, 1),
               ),
             ),
-            const CircleAvatar(
-              // backgroundImage: AssetImage(''),
-              backgroundColor: Colors.white,
+            GestureDetector(
+              onTap: () {
+                Scaffold.of(context).openEndDrawer();
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color.fromRGBO(241, 152, 69, 1),
+                    width: 1.0,
+                  ),
+                ),
+                child: const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.person,
+                    color: Color.fromRGBO(241, 152, 69, 1),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
+      actions: const [
+        SizedBox.shrink(),
+      ],
     );
   }
 
   @override
   Size get preferredSize => Size.fromHeight(80.h);
+}
+
+void showActionSnackBar(BuildContext context) {
+  const snackBar = SnackBar(
+    content: Text(
+      'Algo deu errado, tente novamente!',
+      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+    ),
+    backgroundColor: Colors.redAccent,
+  );
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
