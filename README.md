@@ -43,23 +43,23 @@ Para facilitar a comunicação, o app conta com um chat integrado para conversas
 
 # 🛠 Como Rodar o Projeto
 
-Clone este repositório:
+### Clone este repositório:
 
-git clone [https://github.com/seuusuario/app-adocao-pets.git](https://github.com/GabrieleSacramento/pet_adoption.git)
+#### git clone [https://github.com/seuusuario/app-adocao-pets.git](https://github.com/GabrieleSacramento/pet_adoption.git)
 
-Acesse a pasta do projeto:
+### Acesse a pasta do projeto:
 
-cd pet_adoption
+#### cd pet_adoption
 
-Instale as dependências:
+### Instale as dependências:
 
-flutter pub get
+#### flutter pub get
 
-Configure o Firebase conforme a documentação oficial do FlutterFire.
+### Configure o Firebase conforme a documentação oficial do FlutterFire.
 
-Execute o aplicativo:
+### Execute o aplicativo:
 
-flutter run
+#### flutter run
 
 # 📌 Contribuição
 
